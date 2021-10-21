@@ -1,0 +1,52 @@
+{
+	"info": {
+		"_postman_id": "1c17dcfa-2ead-44c5-bb52-2df6df1d60f3",
+		"name": "BonareaStudentCrud",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Student",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Create Student Test\", function(){\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"studentId\":0,\r\n    \"name\":\"jkjklkjlk\",\r\n    \"surname\":\"ñalkajd\",\r\n    \"email\":\"alñkj\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{protocol}}://{{domain}}:{{port}}/webapi-rest-java-ee/resources/StudentFacadeREST",
+					"protocol": "{{protocol}}",
+					"host": [
+						"{{domain}}"
+					],
+					"port": "{{port}}",
+					"path": [
+						"webapi-rest-java-ee",
+						"resources",
+						"StudentFacadeREST"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
