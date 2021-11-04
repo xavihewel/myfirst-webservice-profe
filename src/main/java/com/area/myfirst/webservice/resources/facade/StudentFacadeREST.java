@@ -29,7 +29,10 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  *
@@ -40,40 +43,62 @@ import javax.ws.rs.core.MediaType;
 @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 @Api(value = "Example StudentFacadeREST",
-     protocols = "http")
+        protocols = "http")
 public class StudentFacadeREST {
 
-   private static final Logger logger = Logger.getLogger(StudentFacadeREST.class.getName());
-    
-   @Inject
-   StudentService studentService;
-   
-   
+    private static final Logger logger = Logger.getLogger(StudentFacadeREST.class.getName());
+
+    @Inject
+    StudentService studentService;
 
     public StudentFacadeREST() {
-        
+
+    }
+
+    @ApiOperation(value = "Simple Async",
+            notes = "This method will return a long job")
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Executed")
+    })
+    @GET
+    @Path("simpleAsync")
+    public void asyncGet(@Suspended final AsyncResponse asyncResponse) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+                String processingThread = Thread.currentThread().getName();
+                System.out.println("Processing therad: " + processingThread);
+                asyncResponse.resume(Response.ok("Long Operation Executed").build());
+            }
+
+        }).start();
     }
 
     @POST
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @ApiOperation(value = "Insert a new Student",
-    notes = "This method will insert a new Student to database and return the Student inserted in json format")
+            notes = "This method will insert a new Student to database and return the Student inserted in json format")
     @ApiResponses({
-      @ApiResponse(code=200, message="Inserted"),
-      @ApiResponse(code=500, message="Internal Server Error")
+        @ApiResponse(code = 200, message = "Inserted"),
+        @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    public Student create(@ApiParam(required=true) Student entity) {
+    public Student create(@ApiParam(required = true) Student entity) {
         logger.info("StudentFacadeREST create method is called");
         Student insertedStudent = null;
         try {
-            insertedStudent = studentService.create(entity);          
+            insertedStudent = studentService.create(entity);
         } catch (SQLException ex) {
             logger.log(Level.SEVERE, ex.getMessage(), ex);
             logger.log(Level.INFO, "Student: {0}", entity);
             throw new InternalServerErrorException(ex.getMessage());
         }
-        logger.info("StudentFacadeREST create method is finished"); 
+        logger.info("StudentFacadeREST create method is finished");
         return insertedStudent;
     }
 
@@ -82,79 +107,78 @@ public class StudentFacadeREST {
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @ApiOperation(value = "Updates an existing Student")
     @ApiResponses({
-      @ApiResponse(code=200, message="Updated"),
-      @ApiResponse(code=404, message="Not found"),
-      @ApiResponse(code=500, message="Internal Server Error")
+        @ApiResponse(code = 200, message = "Updated"),
+        @ApiResponse(code = 404, message = "Not found"),
+        @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    public void edit(@ApiParam(required=true) @PathParam("id") Integer id,
-                     @ApiParam(required=true) Student entity) {
-        
+    public void edit(@ApiParam(required = true) @PathParam("id") Integer id,
+            @ApiParam(required = true) Student entity) {
+
     }
 
     @DELETE
     @Path("{id}")
     @ApiOperation(value = "Remove an existing Student")
     @ApiResponses({
-      @ApiResponse(code=200, message="Removed"),
-      @ApiResponse(code=404, message="Not found"),
-      @ApiResponse(code=500, message="Internal Server Error")
+        @ApiResponse(code = 200, message = "Removed"),
+        @ApiResponse(code = 404, message = "Not found"),
+        @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    public void remove(@ApiParam(required=true) @PathParam("id") Integer id) {
-        
+    public void remove(@ApiParam(required = true) @PathParam("id") Integer id) {
+
     }
 
     @GET
     @Path("{id}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    @ApiOperation(value = "Find a Student in the database by Id", 
-                  notes = "This will return Student json to the client",
-                  response = Student.class)
+    @ApiOperation(value = "Find a Student in the database by Id",
+            notes = "This will return Student json to the client",
+            response = Student.class)
     @ApiResponses({
-      @ApiResponse(code=200, message="Found"),
-      @ApiResponse(code=404, message="Not found"),
-      @ApiResponse(code=500, message="Internal Server Error")
+        @ApiResponse(code = 200, message = "Found"),
+        @ApiResponse(code = 404, message = "Not found"),
+        @ApiResponse(code = 500, message = "Internal Server Error")
     })
-    public Student find(@ApiParam(required=true) @PathParam("id") Integer id) {
+    public Student find(@ApiParam(required = true) @PathParam("id") Integer id) {
         Student student = null;
-        
-        try{
+
+        try {
             if (student == null) {
-             throw new NotFoundException();
+                throw new NotFoundException();
             }
-        }catch(Exception ex){
-            
+        } catch (Exception ex) {
+
             throw new InternalServerErrorException(ex.getMessage());
         }
-        
-        
+
         return new Student();
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
     @ApiOperation(value = "Fetch all the students",
-                  response = Student.class, responseContainer = "List")
+            response = Student.class, responseContainer = "List")
     @ApiResponses({
-        @ApiResponse(code=200, message="Success"),
-        @ApiResponse(code=404, message="Not Found"),
-        @ApiResponse(code=500, message="Internal Server Error")
+        @ApiResponse(code = 200, message = "Success"),
+        @ApiResponse(code = 404, message = "Not Found"),
+        @ApiResponse(code = 500, message = "Internal Server Error")
     })
     public List<Student> findAll() {
         logger.info("StudentFacadeREST findAll method is called");
-        List<Student> studentList= new ArrayList<>();
-        Student student1=new Student();
-        
-        try{
-        student1.setName("Pepe");
-        student1.setSurname("Soto");
-        
-        studentList.add(student1);
-        }catch(Exception ex){
+        List<Student> studentList = new ArrayList<>();
+        Student student1 = new Student();
+
+        try {
+            student1.setName("Pepe");
+            student1.setSurname("Soto");
+
+            studentList.add(student1);
+        } catch (Exception ex) {
             throw new InternalServerErrorException(ex.getMessage());
         }
-        
+
         logger.info("StudentFacadeREST findAll method is finished");
         return studentList;
     }
-    
+
 }
